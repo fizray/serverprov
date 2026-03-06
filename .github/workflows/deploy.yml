@@ -344,6 +344,23 @@ jobs:
       - name: Trigger Amplify build
         id: amplify
         run: |
+          # Stop any pending/running jobs on this branch first
+          RUNNING=$(aws amplify list-jobs \
+            --app-id "${{ secrets.AMPLIFY_APP_ID }}" \
+            --branch-name ${{ github.ref_name }} \
+            --region ${{ env.AWS_REGION }} \
+            --query 'jobSummaries[?status==`RUNNING` || status==`PENDING`].jobId' \
+            --output text --no-cli-pager 2>/dev/null || echo "")
+          for JID in $RUNNING; do
+            echo "Stopping existing job: $JID"
+            aws amplify stop-job \
+              --app-id "${{ secrets.AMPLIFY_APP_ID }}" \
+              --branch-name ${{ github.ref_name }} \
+              --job-id "$JID" \
+              --region ${{ env.AWS_REGION }} \
+              --no-cli-pager || true
+          done
+          [ -n "$RUNNING" ] && sleep 5
           JOB_ID=$(aws amplify start-job \
             --app-id "${{ secrets.AMPLIFY_APP_ID }}" \
             --branch-name ${{ github.ref_name }} \
