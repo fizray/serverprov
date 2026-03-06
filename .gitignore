@@ -2,3 +2,5 @@ aws/
 cloudformation/
 awscliv2.zip
 deploy-juri.sh.patch
+
+token

@@ -183,6 +183,7 @@
       <span class="ml-auto text-xs font-bold px-1.5 py-0.5 rounded" style="background:rgba(99,102,241,.2);color:#a5b4fc" id="running-count" style="display:none">0</span>
     </a>
     <a class="nav-item" onclick="showPage('health')" id="nav-health"><i class="fas fa-heartbeat"></i> System Health</a>
+    <a class="nav-item" onclick="showPage('settings')" id="nav-settings"><i class="fas fa-cog"></i> Settings</a>
   </div>
 
   <div class="p-4 border-t" style="border-color:var(--border)">
@@ -513,6 +514,107 @@
 </div>
 
 <!-- Toast -->
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SETTINGS PAGE                                       -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="page-settings" class="page p-6" style="max-width:640px;margin:0 auto;">
+  <div class="mb-6">
+    <h2 class="text-xl font-bold mb-1" style="color:var(--text)"><i class="fas fa-cog mr-2" style="color:#6366f1"></i>API Settings</h2>
+    <p class="text-sm" style="color:var(--text-muted)">Konfigurasi API endpoint dan key untuk koneksi ke backend AWS.</p>
+  </div>
+
+  <!-- Status banner -->
+  <div id="settings-banner" class="mb-5 rounded-lg px-4 py-3 text-sm font-medium flex items-center gap-3" style="display:none!important"></div>
+
+  <div class="glass p-5">
+    <div class="mb-4">
+      <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted)">
+        <i class="fas fa-link mr-1"></i> API Endpoint URL
+      </label>
+      <input id="input-api-url" type="url" class="input-custom"
+        placeholder="https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/production"
+        autocomplete="off" spellcheck="false" />
+      <p class="text-xs mt-1" style="color:var(--text-muted)">Output <code>ApiEndpoint</code> dari stack 06-apigateway</p>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted)">
+        <i class="fas fa-key mr-1"></i> API Key
+      </label>
+      <div style="position:relative">
+        <input id="input-api-key" type="password" class="input-custom" style="padding-right:44px"
+          placeholder="••••••••••••••••••••••••••••••••••••••••"
+          autocomplete="off" spellcheck="false" />
+        <button onclick="toggleKeyVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted)" title="Show/hide">
+          <i class="fas fa-eye" id="eye-icon"></i>
+        </button>
+      </div>
+      <p class="text-xs mt-1" style="color:var(--text-muted)">Ambil dari Console: API Gateway → API Keys → techno-api-key → <b>Show</b></p>
+    </div>
+
+    <div class="mb-5">
+      <label class="block text-xs font-semibold uppercase tracking-wider mb-2" style="color:var(--text-muted)">
+        <i class="fas fa-globe mr-1"></i> AWS Region
+      </label>
+      <select id="input-api-region" class="input-custom">
+        <option value="us-east-1">us-east-1 (N. Virginia)</option>
+        <option value="us-east-2">us-east-2 (Ohio)</option>
+        <option value="us-west-2">us-west-2 (Oregon)</option>
+        <option value="ap-southeast-1">ap-southeast-1 (Singapore)</option>
+      </select>
+    </div>
+
+    <div class="flex gap-3">
+      <button onclick="saveSettings()" class="btn-primary-custom flex-1 justify-center">
+        <i class="fas fa-save"></i> Simpan & Test Koneksi
+      </button>
+      <button onclick="clearSettings()" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-size:.875rem;transition:all .2s"
+        onmouseover="this.style.borderColor='#ef4444';this.style.color='#f87171'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+        <i class="fas fa-trash"></i> Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Connection test result -->
+  <div id="conn-test-result" class="mt-4 rounded-lg px-4 py-3 text-sm" style="display:none"></div>
+
+  <!-- Current config display -->
+  <div class="mt-5 glass p-4">
+    <div class="text-xs font-semibold uppercase tracking-wider mb-3" style="color:var(--text-muted)">Konfigurasi Aktif</div>
+    <div class="space-y-2">
+      <div class="flex items-start gap-2 text-xs">
+        <span style="color:var(--text-muted);min-width:60px">URL</span>
+        <span id="display-url" class="mono break-all" style="color:#a5b4fc">-</span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span style="color:var(--text-muted);min-width:60px">API Key</span>
+        <span id="display-key" class="mono" style="color:#a5b4fc">-</span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span style="color:var(--text-muted);min-width:60px">Region</span>
+        <span id="display-region" class="mono" style="color:#a5b4fc">-</span>
+      </div>
+      <div class="flex items-center gap-2 text-xs">
+        <span style="color:var(--text-muted);min-width:60px">Status</span>
+        <span id="display-status">
+          <span class="badge-status badge-pending">Belum ditest</span>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER BELUM DIKONFIGURASI (muncul di semua halaman kecuali Settings) -->
+<div id="config-warning-banner" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:500;
+  background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);border-radius:10px;
+  padding:10px 20px;font-size:.8rem;color:#fbbf24;backdrop-filter:blur(8px);white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);cursor:pointer" onclick="showPage('settings')" title="Klik untuk buka Settings">
+  <i class="fas fa-exclamation-triangle mr-2"></i>
+  API belum dikonfigurasi — <b>klik di sini untuk setup</b>
+</div>
+
 <div class="toast-container" id="toasts"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -521,11 +623,17 @@
 // ══════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════
+// Load dari localStorage (diset via halaman Settings)
+const _saved = {
+  url: localStorage.getItem('techno_api_url') || window.API_ENDPOINT || '',
+  key: localStorage.getItem('techno_api_key') || window.API_KEY || '',
+  region: localStorage.getItem('techno_api_region') || window.AWS_REGION || 'us-east-1',
+};
 const CONFIG = {
-  API_URL: window.API_ENDPOINT || 'https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/production',
-  API_KEY: window.API_KEY || 'YOUR_API_KEY',
-  REGION: window.AWS_REGION || 'us-east-1',
-  POLL_INTERVAL: 4000,  // ms - poll live executions
+  API_URL: _saved.url,
+  API_KEY: _saved.key,
+  REGION: _saved.region,
+  POLL_INTERVAL: 4000,
 };
 
 // ══════════════════════════════════════
@@ -1271,6 +1379,126 @@ document.addEventListener('DOMContentLoaded',async()=>{
     }
   }, 3000);
 });
+
+// ══════════════════════════════════════
+// SETTINGS PAGE FUNCTIONS
+// ══════════════════════════════════════
+function initSettingsPage() {
+  const url = localStorage.getItem('techno_api_url') || '';
+  const key = localStorage.getItem('techno_api_key') || '';
+  const region = localStorage.getItem('techno_api_region') || 'us-east-1';
+  document.getElementById('input-api-url').value = url;
+  document.getElementById('input-api-key').value = key;
+  document.getElementById('input-api-region').value = region;
+  updateConfigDisplay();
+}
+
+function updateConfigDisplay() {
+  const url = localStorage.getItem('techno_api_url') || '-';
+  const key = localStorage.getItem('techno_api_key') || '-';
+  const region = localStorage.getItem('techno_api_region') || '-';
+  document.getElementById('display-url').textContent = url;
+  document.getElementById('display-key').textContent = key !== '-' ? key.substring(0,8) + '••••••••••••••••••••••••' : '-';
+  document.getElementById('display-region').textContent = region;
+}
+
+function toggleKeyVisibility() {
+  const inp = document.getElementById('input-api-key');
+  const icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.className = 'fas fa-eye-slash';
+  } else {
+    inp.type = 'password';
+    icon.className = 'fas fa-eye';
+  }
+}
+
+async function saveSettings() {
+  const url = document.getElementById('input-api-url').value.trim().replace(/\/+$/, '');
+  const key = document.getElementById('input-api-key').value.trim();
+  const region = document.getElementById('input-api-region').value;
+
+  if (!url || !key) {
+    showToast('API URL dan API Key wajib diisi', 'error');
+    return;
+  }
+  if (!url.startsWith('https://')) {
+    showToast('API URL harus diawali https://', 'error');
+    return;
+  }
+
+  // Simpan ke localStorage
+  localStorage.setItem('techno_api_url', url);
+  localStorage.setItem('techno_api_key', key);
+  localStorage.setItem('techno_api_region', region);
+
+  // Update CONFIG live (tanpa reload)
+  CONFIG.API_URL = url;
+  CONFIG.API_KEY = key;
+  CONFIG.REGION = region;
+
+  updateConfigDisplay();
+  checkConfigWarning();
+
+  // Test koneksi ke /health
+  const resultEl = document.getElementById('conn-test-result');
+  resultEl.style.display = 'block';
+  resultEl.style.background = 'rgba(99,102,241,0.1)';
+  resultEl.style.border = '1px solid rgba(99,102,241,0.3)';
+  resultEl.style.color = '#a5b4fc';
+  resultEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing koneksi ke <code>/health</code>...';
+
+  document.getElementById('display-status').innerHTML = '<span class="badge-status badge-processing">Testing...</span>';
+
+  try {
+    const res = await fetch(url + '/health', {
+      method: 'GET',
+      headers: { 'x-api-key': key, 'Content-Type': 'application/json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      resultEl.style.background = 'rgba(34,197,94,0.1)';
+      resultEl.style.border = '1px solid rgba(34,197,94,0.3)';
+      resultEl.style.color = '#4ade80';
+      resultEl.innerHTML = '<i class="fas fa-check-circle mr-2"></i><b>Koneksi berhasil!</b> API siap digunakan.';
+      document.getElementById('display-status').innerHTML = '<span class="badge-status badge-completed">Connected</span>';
+      showToast('Konfigurasi tersimpan & koneksi berhasil!', 'success');
+    } else {
+      throw new Error('HTTP ' + res.status);
+    }
+  } catch (e) {
+    resultEl.style.background = 'rgba(239,68,68,0.1)';
+    resultEl.style.border = '1px solid rgba(239,68,68,0.3)';
+    resultEl.style.color = '#f87171';
+    resultEl.innerHTML = '<i class="fas fa-times-circle mr-2"></i><b>Gagal:</b> ' + e.message + '. Periksa URL dan API Key.';
+    document.getElementById('display-status').innerHTML = '<span class="badge-status badge-failed">Failed</span>';
+    showToast('Konfigurasi tersimpan, tapi koneksi gagal', 'error');
+  }
+}
+
+function clearSettings() {
+  if (!confirm('Reset semua konfigurasi API?')) return;
+  localStorage.removeItem('techno_api_url');
+  localStorage.removeItem('techno_api_key');
+  localStorage.removeItem('techno_api_region');
+  CONFIG.API_URL = ''; CONFIG.API_KEY = ''; CONFIG.REGION = 'us-east-1';
+  document.getElementById('input-api-url').value = '';
+  document.getElementById('input-api-key').value = '';
+  document.getElementById('input-api-region').value = 'us-east-1';
+  document.getElementById('conn-test-result').style.display = 'none';
+  document.getElementById('display-status').innerHTML = '<span class="badge-status badge-pending">Belum ditest</span>';
+  updateConfigDisplay();
+  checkConfigWarning();
+  showToast('Konfigurasi direset', 'info');
+}
+
+function checkConfigWarning() {
+  const hasConfig = CONFIG.API_URL && CONFIG.API_KEY;
+  const banner = document.getElementById('config-warning-banner');
+  banner.style.display = hasConfig ? 'none' : 'block';
+}
+
 </script>
 </body>
 </html>

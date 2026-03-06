@@ -26,6 +26,8 @@ techno-juri/
 
 ---
 
+Update
+
 ## STEP 1 — Deploy Infrastruktur (Satu Script)
 
 ```bash
