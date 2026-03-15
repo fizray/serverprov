@@ -35,7 +35,7 @@
 #    5=Compute (Lambda Layer + Functions)
 #    6=StepFunctions (Order workflow ASL)
 #    7=API Gateway (REST API + Usage Plan)
-#    8=EventBridge (Rules & Targets)
+#    8=EventBridge (Rules & Targets) + CloudWatch Alarms + Dashboard
 #    9=CI/CD (CodeDeploy + Amplify)
 #    10=InitDB (Init Lambda invoke)
 #    11=Verify
@@ -78,7 +78,7 @@ usage() {
     echo "  Steps:"
     echo "    1=Network   2=Storage   3=Database   4=Secrets"
     echo "    5=Lambda    6=StepFunctions   7=APIGateway"
-    echo "    8=EventBridge   9=CICD   10=InitDB   11=Verify"
+    echo "    8=EventBridge+CloudWatch   9=CICD   10=InitDB   11=Verify"
     echo ""
     echo "  Fix RDS timeout (jalankan tanpa rebuild layer):"
     echo "    ./judge.sh deploy <nama> <email> 5  # fix VPC+SG lalu lanjut"
@@ -164,10 +164,10 @@ cleanup_failed_stack() {
 resolve_state() {
     log "Resolving AWS resource state..."
     API_ID=$(aws apigateway get-rest-apis --region "$REGION" \
-        --query "items[?name=='${PROJECT}-api'].id" \
+        --query "items[?name=='${PROJECT}-api-orders'].id" \
         --output text 2>/dev/null || echo "")
     API_KEY_VALUE=$(aws apigateway get-api-keys \
-        --name-query "${PROJECT}-api-key" --include-values \
+        --name-query "${PROJECT}-api-orders-key" --include-values \
         --region "$REGION" \
         --query "items[0].value" --output text 2>/dev/null || echo "")
     if [ -n "$API_ID" ] && [ "$API_ID" != "None" ]; then
@@ -221,11 +221,11 @@ amp  = boto3.client("amplify",        region_name=region)
 def api_info():
     try:
         apis = apigw.get_rest_apis(limit=100).get("items", [])
-        api  = next((a for a in apis if a["name"] == f"{P}-api"), None)
+        api  = next((a for a in apis if a["name"] == f"{P}-api-orders"), None)
         if not api: return "", ""
         api_id   = api["id"]
         endpoint = f"https://{api_id}.execute-api.{region}.amazonaws.com/production"
-        keys     = apigw.get_api_keys(nameQuery=f"{P}-api-key", includeValues=True).get("items", [])
+        keys     = apigw.get_api_keys(nameQuery=f"{P}-api-orders-key", includeValues=True).get("items", [])
         key_val  = keys[0]["value"] if keys else ""
         return endpoint, key_val
     except Exception:
@@ -281,7 +281,7 @@ chk("Storage",f"S3 reports bucket {P}-reports-{sn}-2026",2, lambda:
 # ── RDS ───────────────────────────────────────────────────
 rds_client = boto3.client("rds", region_name=region)
 chk("RDS","Instance techno-rds available",5, lambda: (
-    rds_client.describe_db_instances(DBInstanceIdentifier=f"{P}-rds")
+    rds_client.describe_db_instances(DBInstanceIdentifier=f"{P}-rds-orders")
     ["DBInstances"][0]["DBInstanceStatus"] == "available" and "available"
 ))
 chk("RDS","Secret techno/db/credentials exists",3, lambda: (
@@ -389,6 +389,28 @@ chk("EventBridge","Rule techno-daily-report ENABLED",3, lambda: (
     ev.describe_rule(Name=f"{P}-daily-report")["State"] == "ENABLED" and "ENABLED"
 ))
 
+# Stack CFN tidak dipakai — CloudWatch dibuat via CLI
+chk("CloudWatch","Dashboard techno-dashboard-serverless exists",4, lambda: (
+    cw.get_dashboard(DashboardName="techno-dashboard-serverless")
+    ["DashboardName"]
+))
+ALARM_NAMES = [
+    "techno-alarm-lambda-errors",
+    "techno-alarm-lambda-duration",
+    "techno-alarm-api-4xx",
+    "techno-alarm-api-5xx",
+    "techno-alarm-sf-failures",
+    "techno-alarm-rds-cpu",
+]
+chk("CloudWatch","6 CloudWatch Alarms exist",4, lambda: (
+    (lambda r: f"{len(r['MetricAlarms'])}/6 alarms found")(
+        cw.describe_alarms(AlarmNames=ALARM_NAMES)
+    ) if len(cw.describe_alarms(AlarmNames=ALARM_NAMES)["MetricAlarms"]) == 6
+    else (_ for _ in ()).throw(Exception(
+        f"Only {len(cw.describe_alarms(AlarmNames=ALARM_NAMES)['MetricAlarms'])}/6 alarms found"
+    ))
+))
+
 # ── Amplify ───────────────────────────────────────────────
 chk("Amplify","Amplify app techno-frontend deployed",3, lambda: (
     amp.list_apps()["apps"] and
@@ -447,7 +469,7 @@ if [[ "$MODE" == "teardown" ]]; then
 
     warn "Menghapus API Gateway..."
     _API=$(aws apigateway get-rest-apis --region "$REGION" \
-        --query "items[?name=='${PROJECT}-api'].id" --output text 2>/dev/null || echo "")
+        --query "items[?name=='${PROJECT}-api-orders'].id" --output text 2>/dev/null || echo "")
     [ -n "$_API" ] && [ "$_API" != "None" ] && \
         aws apigateway delete-rest-api --rest-api-id "$_API" --region "$REGION" 2>/dev/null && \
         ok "API GW deleted" || warn "API GW tidak ditemukan"
@@ -483,7 +505,7 @@ if [[ "$MODE" == "teardown" ]]; then
 
     warn "Menghapus RDS instance..."
     aws rds delete-db-instance \
-        --db-instance-identifier "${PROJECT}-rds" \
+        --db-instance-identifier "${PROJECT}-rds-orders" \
         --skip-final-snapshot \
         --region "$REGION" 2>/dev/null && ok "RDS deletion started" || warn "RDS tidak ditemukan"
     aws secretsmanager delete-secret \
@@ -529,6 +551,13 @@ if [[ "$MODE" == "teardown" ]]; then
         --application-name "${PROJECT}-app" \
         --region "$REGION" 2>/dev/null || true
     ok "CodeDeploy deleted"
+
+    warn "Menghapus CloudWatch Dashboard + Alarms..."
+    aws cloudwatch delete-dashboards         --dashboard-names "techno-dashboard-serverless"         --region "$REGION" 2>/dev/null || true
+    for _ALARM in techno-alarm-lambda-errors techno-alarm-lambda-duration                   techno-alarm-api-4xx techno-alarm-api-5xx                   techno-alarm-sf-failures techno-alarm-rds-cpu; do
+        aws cloudwatch delete-alarms --alarm-names "$_ALARM"             --region "$REGION" 2>/dev/null || true
+    done
+    ok "CloudWatch resources deleted (juga akan terhapus via CFN stack)"
 
     warn "Menghapus CloudFormation stacks..."
     for STACK in \
@@ -867,9 +896,20 @@ if ! skip_step 3; then
         --subnet-ids "$PRIV_SN1" "$PRIV_SN2" \
         --region "$REGION" --no-cli-pager > /dev/null 2>&1 || true
 
+    # Migrate: jika ada techno-rds (nama lama), rename ke techno-rds-orders
+    OLD_RDS=$(aws rds describe-db-instances         --db-instance-identifier "${PROJECT}-rds"         --query "DBInstances[0].DBInstanceStatus"         --output text --region "$REGION" 2>/dev/null || echo "NOT_FOUND")
+    if [ "$OLD_RDS" != "NOT_FOUND" ] && [ "$OLD_RDS" != "None" ]; then
+        warn "Ditemukan RDS lama '${PROJECT}-rds' — rename ke '${PROJECT}-rds-orders'..."
+        aws rds modify-db-instance             --db-instance-identifier "${PROJECT}-rds"             --new-db-instance-identifier "${PROJECT}-rds-orders"             --apply-immediately             --region "$REGION" --no-cli-pager > /dev/null
+        log "  Waiting for rename to complete (~2 menit)..."
+        sleep 60
+        aws rds wait db-instance-available             --db-instance-identifier "${PROJECT}-rds-orders"             --region "$REGION" 2>/dev/null ||         aws rds wait db-instance-available             --db-instance-identifier "${PROJECT}-rds"             --region "$REGION" 2>/dev/null || true
+        ok "RDS renamed to techno-rds-orders"
+    fi
+
     # Cek apakah RDS sudah ada
     RDS_STATUS=$(aws rds describe-db-instances \
-        --db-instance-identifier "${PROJECT}-rds" \
+        --db-instance-identifier "${PROJECT}-rds-orders" \
         --query "DBInstances[0].DBInstanceStatus" \
         --output text --region "$REGION" 2>/dev/null || echo "NOT_FOUND")
 
@@ -887,7 +927,7 @@ if ! skip_step 3; then
         [ -z "$PG_VERSION" ] && PG_VERSION="15.7"
         log "  PostgreSQL version: $PG_VERSION"
         aws rds create-db-instance \
-            --db-instance-identifier "${PROJECT}-rds" \
+            --db-instance-identifier "${PROJECT}-rds-orders" \
             --db-instance-class db.t3.micro \
             --engine postgres \
             --engine-version "$PG_VERSION" \
@@ -909,10 +949,10 @@ if ! skip_step 3; then
 
     log "Waiting for RDS available (max 15 menit)..."
     aws rds wait db-instance-available \
-        --db-instance-identifier "${PROJECT}-rds" --region "$REGION"
+        --db-instance-identifier "${PROJECT}-rds-orders" --region "$REGION"
 
     RDS_ENDPOINT=$(aws rds describe-db-instances \
-        --db-instance-identifier "${PROJECT}-rds" \
+        --db-instance-identifier "${PROJECT}-rds-orders" \
         --query "DBInstances[0].Endpoint.Address" \
         --output text --region "$REGION")
     ok "RDS ready: $RDS_ENDPOINT"
@@ -920,7 +960,7 @@ fi
 
 # Resolve RDS endpoint untuk step berikutnya
 RDS_ENDPOINT=$(aws rds describe-db-instances \
-    --db-instance-identifier "${PROJECT}-rds" \
+    --db-instance-identifier "${PROJECT}-rds-orders" \
     --query "DBInstances[0].Endpoint.Address" \
     --output text --region "$REGION" 2>/dev/null || echo "")
 
@@ -1435,12 +1475,20 @@ section "STEP 7/11 — API Gateway (REST API)"
 if ! skip_step 7; then
     # Create or get API
     API_ID=$(aws apigateway get-rest-apis --region "$REGION" \
-        --query "items[?name=='${PROJECT}-api'].id" \
+        --query "items[?name=='${PROJECT}-api-orders'].id" \
         --output text 2>/dev/null || echo "")
+
+    # Migrate: cek apakah ada API lama 'techno-api', rename
+    OLD_API_ID=$(aws apigateway get-rest-apis --region "$REGION"         --query "items[?name=='${PROJECT}-api-orders'].id"         --output text 2>/dev/null || echo "")
+    if [ -n "$OLD_API_ID" ] && [ "$OLD_API_ID" != "None" ]; then
+        log "  Migrating API name: ${PROJECT}-api → ${PROJECT}-api-orders..."
+        aws apigateway update-rest-api             --rest-api-id "$OLD_API_ID"             --patch-operations "op=replace,path=/name,value=${PROJECT}-api-orders"             --region "$REGION" --no-cli-pager > /dev/null &&             ok "  API renamed to ${PROJECT}-api-orders" ||             warn "  Could not rename API"
+        API_ID="$OLD_API_ID"
+    fi
 
     if [ -z "$API_ID" ] || [ "$API_ID" = "None" ]; then
         API_ID=$(aws apigateway create-rest-api \
-            --name "${PROJECT}-api" \
+            --name "${PROJECT}-api-orders" \
             --description "Techno Serverless OMS API" \
             --endpoint-configuration types=REGIONAL \
             --region "$REGION" --query id --output text)
@@ -1632,15 +1680,15 @@ CORSJSON
 
     # API Key + Usage Plan
     API_KEY_ID=$(aws apigateway get-api-keys \
-        --name-query "${PROJECT}-api-key" --include-values \
+        --name-query "${PROJECT}-api-orders-key" --include-values \
         --region "$REGION" --query "items[0].id" --output text 2>/dev/null || echo "")
 
     if [ -z "$API_KEY_ID" ] || [ "$API_KEY_ID" = "None" ]; then
         API_KEY_ID=$(aws apigateway create-api-key \
-            --name "${PROJECT}-api-key" --enabled \
+            --name "${PROJECT}-api-orders-key" --enabled \
             --region "$REGION" --query id --output text)
         PLAN_ID=$(aws apigateway create-usage-plan \
-            --name "${PROJECT}-usage-plan" \
+            --name "${PROJECT}-api-orders-usage-plan" \
             --api-stages "apiId=${API_ID},stage=production" \
             --throttle "rateLimit=1000,burstLimit=2000" \
             --quota "limit=100000,period=MONTH" \
@@ -1654,7 +1702,7 @@ CORSJSON
         # Ensure usage plan association
         PLAN_ID=$(aws apigateway get-usage-plans \
             --region "$REGION" \
-            --query "items[?name=='${PROJECT}-usage-plan'].id | [0]" \
+            --query "items[?name=='${PROJECT}-api-orders-usage-plan'].id | [0]" \
             --output text 2>/dev/null || echo "")
         if [ -n "$PLAN_ID" ] && [ "$PLAN_ID" != "None" ]; then
             aws apigateway update-usage-plan \
@@ -1705,6 +1753,149 @@ if ! skip_step 8; then
         --region "$REGION" --no-cli-pager > /dev/null
     ok "EventBridge rule aktif: cron(0 0 * * ? *)"
 fi
+
+# ================================================================
+#  STEP 8b: CloudWatch Alarms + Dashboard (AWS CLI)
+# ================================================================
+section "STEP 8b — CloudWatch Alarms + Dashboard"
+if [ "${FROM_STEP:-1}" -le 8 ] 2>/dev/null; then
+
+    # Tulis helper script untuk buat dashboard JSON
+    cat > /tmp/techno_make_dashboard.py << 'DASHPYEOF'
+import json, sys
+region=sys.argv[1]; account=sys.argv[2]; sf_arn=sys.argv[3]; rds_id=sys.argv[4]; out=sys.argv[5]
+body={"widgets":[
+    {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"title":"Lambda - Invocations & Errors","view":"timeSeries","region":region,"metrics":[
+        ["AWS/Lambda","Invocations","FunctionName","techno-lambda-order-management",{"stat":"Sum","period":300}],
+        ["AWS/Lambda","Errors","FunctionName","techno-lambda-order-management",{"stat":"Sum","period":300,"color":"#d62728"}],
+        ["AWS/Lambda","Invocations","FunctionName","techno-lambda-process-payment",{"stat":"Sum","period":300}],
+        ["AWS/Lambda","Invocations","FunctionName","techno-lambda-update-inventory",{"stat":"Sum","period":300}],
+        ["AWS/Lambda","Invocations","FunctionName","techno-lambda-health-check",{"stat":"Sum","period":300}]]}},
+    {"type":"metric","x":12,"y":0,"width":12,"height":6,"properties":{"title":"Lambda - Duration (Max ms)","view":"timeSeries","region":region,"metrics":[
+        ["AWS/Lambda","Duration","FunctionName","techno-lambda-order-management",{"stat":"Maximum","period":300}],
+        ["AWS/Lambda","Duration","FunctionName","techno-lambda-process-payment",{"stat":"Maximum","period":300}],
+        ["AWS/Lambda","Duration","FunctionName","techno-lambda-update-inventory",{"stat":"Maximum","period":300}],
+        ["AWS/Lambda","Duration","FunctionName","techno-lambda-generate-report",{"stat":"Maximum","period":300}]]}},
+    {"type":"metric","x":0,"y":6,"width":12,"height":6,"properties":{"title":"API Gateway - Requests 4XX 5XX","view":"timeSeries","region":region,"metrics":[
+        ["AWS/ApiGateway","Count","ApiName","techno-api-orders","Stage","production",{"stat":"Sum","period":300}],
+        ["AWS/ApiGateway","4XXError","ApiName","techno-api-orders","Stage","production",{"stat":"Sum","period":300,"color":"#ff7f0e"}],
+        ["AWS/ApiGateway","5XXError","ApiName","techno-api-orders","Stage","production",{"stat":"Sum","period":300,"color":"#d62728"}]]}},
+    {"type":"metric","x":12,"y":6,"width":12,"height":6,"properties":{"title":"Step Functions - Executions","view":"timeSeries","region":region,"metrics":[
+        ["AWS/States","ExecutionsStarted","StateMachineArn",sf_arn,{"stat":"Sum","period":300}],
+        ["AWS/States","ExecutionsSucceeded","StateMachineArn",sf_arn,{"stat":"Sum","period":300,"color":"#2ca02c"}],
+        ["AWS/States","ExecutionsFailed","StateMachineArn",sf_arn,{"stat":"Sum","period":300,"color":"#d62728"}]]}},
+    {"type":"metric","x":0,"y":12,"width":12,"height":6,"properties":{"title":"RDS - CPU & Connections","view":"timeSeries","region":region,"metrics":[
+        ["AWS/RDS","CPUUtilization","DBInstanceIdentifier",rds_id,{"stat":"Average","period":300}],
+        ["AWS/RDS","DatabaseConnections","DBInstanceIdentifier",rds_id,{"stat":"Average","period":300,"yAxis":"right"}]]}},
+    {"type":"alarm","x":12,"y":12,"width":12,"height":6,"properties":{"title":"Active Alarms","alarms":[
+        f"arn:aws:cloudwatch:{region}:{account}:alarm:techno-alarm-lambda-errors",
+        f"arn:aws:cloudwatch:{region}:{account}:alarm:techno-alarm-lambda-duration",
+        f"arn:aws:cloudwatch:{region}:{account}:alarm:techno-alarm-api-4xx",
+        f"arn:aws:cloudwatch:{region}:{account}:alarm:techno-alarm-api-5xx",
+        f"arn:aws:cloudwatch:{region}:{account}:alarm:techno-alarm-sf-failures",
+        f"arn:aws:cloudwatch:{region}:{account}:alarm:techno-alarm-rds-cpu"]}}
+]}
+json.dump(body, open(out,"w"))
+print(f"  Dashboard JSON: {out}")
+DASHPYEOF
+
+        _SNS_ARN=$(aws sns list-topics --region "$REGION" \
+        --query "Topics[?ends_with(TopicArn,':${PROJECT}-notifications')].TopicArn" \
+        --output text 2>/dev/null || echo "")
+    _SF_ARN=$(aws stepfunctions list-state-machines --region "$REGION" \
+        --query "stateMachines[?name=='${PROJECT}-order-workflow'].stateMachineArn | [0]" \
+        --output text 2>/dev/null || echo "")
+    _RDS_ID="${PROJECT}-rds-orders"
+
+    log "  SNS    : $_SNS_ARN"
+    log "  SF ARN : $_SF_ARN"
+    log "  RDS ID : $_RDS_ID"
+
+    # ── 6 CloudWatch Alarms ──────────────────────────────────
+    log "Creating CloudWatch Alarms..."
+
+    aws cloudwatch put-metric-alarm \
+        --alarm-name "techno-alarm-lambda-errors" \
+        --alarm-description "Lambda errors > 5 dalam 5 menit" \
+        --namespace AWS/Lambda --metric-name Errors \
+        --statistic Sum --period 300 --evaluation-periods 1 \
+        --threshold 5 --comparison-operator GreaterThanThreshold \
+        --treat-missing-data notBreaching \
+        ${_SNS_ARN:+--alarm-actions "$_SNS_ARN"} \
+        --region "$REGION" --no-cli-pager && log "  ok lambda-errors"
+
+    aws cloudwatch put-metric-alarm \
+        --alarm-name "techno-alarm-lambda-duration" \
+        --alarm-description "Lambda max duration > 3000ms" \
+        --namespace AWS/Lambda --metric-name Duration \
+        --statistic Maximum --period 300 --evaluation-periods 1 \
+        --threshold 3000 --comparison-operator GreaterThanThreshold \
+        --treat-missing-data notBreaching \
+        ${_SNS_ARN:+--alarm-actions "$_SNS_ARN"} \
+        --region "$REGION" --no-cli-pager && log "  ok lambda-duration"
+
+    aws cloudwatch put-metric-alarm \
+        --alarm-name "techno-alarm-api-4xx" \
+        --alarm-description "API 4XX > 20 dalam 5 menit" \
+        --namespace AWS/ApiGateway --metric-name 4XXError \
+        --dimensions Name=ApiName,Value=techno-api-orders Name=Stage,Value=production \
+        --statistic Sum --period 300 --evaluation-periods 1 \
+        --threshold 20 --comparison-operator GreaterThanThreshold \
+        --treat-missing-data notBreaching \
+        ${_SNS_ARN:+--alarm-actions "$_SNS_ARN"} \
+        --region "$REGION" --no-cli-pager && log "  ok api-4xx"
+
+    aws cloudwatch put-metric-alarm \
+        --alarm-name "techno-alarm-api-5xx" \
+        --alarm-description "API 5XX > 5" \
+        --namespace AWS/ApiGateway --metric-name 5XXError \
+        --dimensions Name=ApiName,Value=techno-api-orders Name=Stage,Value=production \
+        --statistic Sum --period 300 --evaluation-periods 1 \
+        --threshold 5 --comparison-operator GreaterThanThreshold \
+        --treat-missing-data notBreaching \
+        ${_SNS_ARN:+--alarm-actions "$_SNS_ARN"} \
+        --region "$REGION" --no-cli-pager && log "  ok api-5xx"
+
+    if [ -n "$_SF_ARN" ] && [ "$_SF_ARN" != "None" ]; then
+        aws cloudwatch put-metric-alarm \
+            --alarm-name "techno-alarm-sf-failures" \
+            --alarm-description "Step Functions failures > 3 dalam 10 menit" \
+            --namespace AWS/States --metric-name ExecutionsFailed \
+            --dimensions Name=StateMachineArn,Value="$_SF_ARN" \
+            --statistic Sum --period 600 --evaluation-periods 1 \
+            --threshold 3 --comparison-operator GreaterThanThreshold \
+            --treat-missing-data notBreaching \
+            ${_SNS_ARN:+--alarm-actions "$_SNS_ARN"} \
+            --region "$REGION" --no-cli-pager && log "  ok sf-failures"
+    fi
+
+    aws cloudwatch put-metric-alarm \
+        --alarm-name "techno-alarm-rds-cpu" \
+        --alarm-description "RDS CPU > 80% selama 5 menit" \
+        --namespace AWS/RDS --metric-name CPUUtilization \
+        --dimensions Name=DBInstanceIdentifier,Value="$_RDS_ID" \
+        --statistic Average --period 300 --evaluation-periods 1 \
+        --threshold 80 --comparison-operator GreaterThanThreshold \
+        --treat-missing-data notBreaching \
+        ${_SNS_ARN:+--alarm-actions "$_SNS_ARN"} \
+        --region "$REGION" --no-cli-pager && log "  ok rds-cpu"
+
+    ok "6 CloudWatch Alarms created"
+
+    # ── CloudWatch Dashboard (via Python ke JSON file) ───────
+    log "Creating CloudWatch Dashboard..."
+    python3 /tmp/techno_make_dashboard.py \
+        "$REGION" "$ACCOUNT_ID" "$_SF_ARN" "$_RDS_ID" \
+        /tmp/techno_dashboard.json
+
+    aws cloudwatch put-dashboard \
+        --dashboard-name "techno-dashboard-serverless" \
+        --dashboard-body "file:///tmp/techno_dashboard.json" \
+        --region "$REGION" --no-cli-pager > /dev/null
+    ok "Dashboard created: techno-dashboard-serverless"
+    ok "Dashboard URL: https://${REGION}.console.aws.amazon.com/cloudwatch/home?region=${REGION}#dashboards:name=techno-dashboard-serverless"
+fi
+
 
 # ================================================================
 #  STEP 9: CI/CD (CodeDeploy + Upload Lambda Code + Amplify)
