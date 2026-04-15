@@ -1,0 +1,52 @@
+---
+Resources:
+  RDSDBInstance:
+    Type: "AWS::RDS::DBInstance"
+    DeletionPolicy: "Delete"
+    Properties:
+      DatabaseInsightsMode: "advanced"
+      StorageEncrypted: true
+      AssociatedRoles: []
+      Port: "5432"
+      AdditionalStorageVolumes: []
+      ProcessorFeatures: []
+      StorageThroughput: 125
+      PreferredBackupWindow: "03:00-04:00"
+      MonitoringInterval: 0
+      DBParameterGroupName: "default.postgres15"
+      NetworkType: "DUAL"
+      DedicatedLogVolume: false
+      CopyTagsToSnapshot: true
+      MultiAZ: false
+      Engine: "postgres"
+      Tags: []
+      EngineLifecycleSupport: "open-source-rds-extended-support-disabled"
+      LicenseModel: "postgresql-license"
+      EngineVersion: "15.17"
+      StorageType: "gp3"
+      DBInstanceClass: "db.t3.micro"
+      PerformanceInsightsRetentionPeriod: 465
+      AvailabilityZone: "us-east-1a"
+      OptionGroupName: "default:postgres-15"
+      EnablePerformanceInsights: true
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: true
+      Iops: 3000
+      DBInstanceIdentifier: "techno-rds-orders"
+      AllocatedStorage: "20"
+      BackupTarget: "region"
+      CACertificateIdentifier: "rds-ca-rsa2048-g1"
+      ManageMasterUserPassword: true
+      MasterUsername: "dbadmin"
+      DBName: "ordersdb"
+      EnableIAMDatabaseAuthentication: false
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 7
+      EnableCloudwatchLogsExports: []
+  SecretsManagerSecretRq:
+    Type: "AWS::SecretsManager::Secret"
+    DeletionPolicy: "Delete"
+    Properties:
+      ReplicaRegions: []
+      Tags: []
+      Name: "techno-secret-rds-credentials"

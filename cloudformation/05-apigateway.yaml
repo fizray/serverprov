@@ -1,0 +1,52 @@
+---
+Resources:
+  ApiGatewayStageProduction:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::ApiGateway::Stage"
+    DeletionPolicy: "Delete"
+    Properties:
+      StageName: "production"
+      CacheClusterSize: "0.5"
+      TracingEnabled: false
+      CacheClusterEnabled: false
+  ApiGatewayUsagePlan:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::ApiGateway::UsagePlan"
+    DeletionPolicy: "Delete"
+    Properties:
+      ApiStages: []
+      Quota:
+        Period: "MONTH"
+        Limit: 100000
+        Offset: 0
+      Tags: []
+      Throttle:
+        BurstLimit: 2000
+        RateLimit: 1000
+      UsagePlanName: "techno-usage-plan"
+  ApiGatewayRestApi:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::ApiGateway::RestApi"
+    DeletionPolicy: "Delete"
+    Properties:
+      ApiKeySourceType: "HEADER"
+      EndpointConfiguration:
+        IpAddressType: "dualstack"
+        Types:
+        - "REGIONAL"
+      DisableExecuteApiEndpoint: false
+      SecurityPolicy: "TLS_1_0"
+      Name: "techno-api-orders"
+  ApiGatewayDeployment:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::ApiGateway::Deployment"
+    DeletionPolicy: "Delete"
+  ApiGatewayApiKey:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::ApiGateway::ApiKey"
+    DeletionPolicy: "Delete"
+    Properties:
+      StageKeys: []
+      Value: "eNz8z0SATikqycIzHAiyeNz8z0SATikqycIzHAiyeNz6767z0SATikqycIzHAiy"
+      Enabled: true
+      Name: "techno-api-key"

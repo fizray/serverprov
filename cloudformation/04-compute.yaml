@@ -1,6 +1,7 @@
 ---
 Resources:
-  techno-lambda-order-management:
+  LambdaFunctionTechnolambdainitdb:
+    UpdateReplacePolicy: "Delete"
     Type: "AWS::Lambda::Function"
     DeletionPolicy: "Delete"
     Properties:
@@ -8,178 +9,30 @@ Resources:
       Description: ""
       TracingConfig:
         Mode: "PassThrough"
-      Timeout: 30
-      RuntimeManagementConfig:
-        UpdateRuntimeOn: "Auto"
-      Handler: "lambda_function.lambda_handler"
-      Code:
-        S3Bucket:
-          Ref: ""
-        ZipFile:
-          Ref: ""
-      Role: "arn:aws:iam::129200883043:role/LabRole"
-      FileSystemConfigs: []
-      FunctionName: "techno-lambda-order-management"
-      Runtime: "python3.11"
-      PackageType: "Zip"
-      LoggingConfig:
-        LogFormat: "Text"
-        LogGroup: "/aws/lambda/techno-lambda-order-management"
-      RecursiveLoop: "Terminate"
-      EphemeralStorage:
-        Size: 512
-      Architectures:
-      - "x86_64"
-      Layers:
-      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
-  techno-lambda-process-payment:
-    Type: "AWS::Lambda::Function"
-    DeletionPolicy: "Delete"
-    Properties:
-      MemorySize: 512
-      Description: ""
-      TracingConfig:
-        Mode: "PassThrough"
-      Timeout: 3
-      RuntimeManagementConfig:
-        UpdateRuntimeOn: "Auto"
-      Handler: "lambda_function.lambda_handler"
-      Code:
-        S3Bucket:
-          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeS3BucketmXUa0"
-        ZipFile:
-          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeZipFile3FgaD"
-      Role: "arn:aws:iam::129200883043:role/LabRole"
-      FileSystemConfigs: []
-      FunctionName: "techno-lambda-process-payment"
-      Runtime: "python3.11"
-      PackageType: "Zip"
-      LoggingConfig:
-        LogFormat: "Text"
-        LogGroup: "/aws/lambda/techno-lambda-process-payment"
-      RecursiveLoop: "Terminate"
-      EphemeralStorage:
-        Size: 512
-      Architectures:
-      - "x86_64"
-      Layers:
-      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
-  techno-lambda-update-inventory:
-    Type: "AWS::Lambda::Function"
-    DeletionPolicy: "Delete"
-    Properties:
-      MemorySize: 256
-      Description: ""
-      TracingConfig:
-        Mode: "PassThrough"
-      Timeout: 3
-      RuntimeManagementConfig:
-        UpdateRuntimeOn: "Auto"
-      Handler: "lambda_function.lambda_handler"
-      Code:
-        S3Bucket:
-          Ref: ""
-        ZipFile:
-          Ref: ""
-      Role: "arn:aws:iam::129200883043:role/LabRole"
-      FileSystemConfigs: []
-      FunctionName: "techno-lambda-update-inventory"
-      Runtime: "python3.11"
-      PackageType: "Zip"
-      LoggingConfig:
-        LogFormat: "Text"
-        LogGroup: "/aws/lambda/techno-lambda-update-inventory"
-      RecursiveLoop: "Terminate"
-      EphemeralStorage:
-        Size: 512
-      Architectures:
-      - "x86_64"
-      Layers:
-      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
-  techno-lambda-send-notification:
-    Type: "AWS::Lambda::Function"
-    DeletionPolicy: "Delete"
-    Timeout: 60
-    Properties:
-      MemorySize: 256
-      Description: ""
-      TracingConfig:
-        Mode: "PassThrough"
-      Timeout: 3
-      RuntimeManagementConfig:
-        UpdateRuntimeOn: "Auto"
-      Handler: "lambda_function.lambda_handler"
-      Code:
-        S3Bucket:
-          Ref: ""
-        ZipFile:
-          Ref: ""
-      Role: "arn:aws:iam::129200883043:role/LabRole"
-      FileSystemConfigs: []
-      FunctionName: "techno-lambda-send-notification"
-      Runtime: "python3.11"
-      PackageType: "Zip"
-      LoggingConfig:
-        LogFormat: "Text"
-        LogGroup: "/aws/lambda/techno-lambda-send-notification"
-      RecursiveLoop: "Terminate"
-      EphemeralStorage:
-        Size: 512
-      Architectures:
-      - "x86_64"
-      Layers:
-      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
-  techno-lambda-generate-report:
-    Type: "AWS::Lambda::Function"
-    DeletionPolicy: "Delete"
-    Properties:
-      MemorySize: 1024
-      Timeout: 120
-      Description: ""
-      TracingConfig:
-        Mode: "PassThrough"
-      Timeout: 3
-      RuntimeManagementConfig:
-        UpdateRuntimeOn: "Auto"
-      Handler: "lambda_function.lambda_handler"
-      Code:
-        S3Bucket:
-          Ref: ""
-        ZipFile:
-          Ref: ""
-      Role: "arn:aws:iam::129200883043:role/LabRole"
-      FileSystemConfigs: []
-      FunctionName: "techno-lambda-generate-report"
-      Runtime: "python3.11"
-      PackageType: "Zip"
-      LoggingConfig:
-        LogFormat: "Text"
-        LogGroup: "/aws/lambda/techno-lambda-generate-report"
-      RecursiveLoop: "Terminate"
-      EphemeralStorage:
-        Size: 512
-      Architectures:
-      - "x86_64"
-      Layers:
-      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
-  techno-lambda-init-db:
-    Type: "AWS::Lambda::Function"
-    DeletionPolicy: "Delete"
-    Properties:
-      MemorySize: 512
-      Description: ""
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: true
       Timeout: 300
-      TracingConfig:
-        Mode: "PassThrough"
-      Timeout: 3
       RuntimeManagementConfig:
         UpdateRuntimeOn: "Auto"
       Handler: "lambda_function.lambda_handler"
       Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTechnolambdainitdbCodeSourceKMSKeyArnDNPNm"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTechnolambdainitdbCodeS3ObjectVersionjwU74"
         S3Bucket:
-          Ref: ""
+          Ref: "LambdaFunctionTechnolambdainitdbCodeS3BucketmE49s"
         ZipFile:
-          Ref: ""
+          Ref: "LambdaFunctionTechnolambdainitdbCodeZipFileNN9KJ"
+        ImageUri:
+          Ref: "LambdaFunctionTechnolambdainitdbCodeImageUrirSLS5"
+        S3Key:
+          Ref: "LambdaFunctionTechnolambdainitdbCodeS3KeyFjsv5"
       Role: "arn:aws:iam::129200883043:role/LabRole"
       FileSystemConfigs: []
       FunctionName: "techno-lambda-init-db"
@@ -189,46 +42,223 @@ Resources:
         LogFormat: "Text"
         LogGroup: "/aws/lambda/techno-lambda-init-db"
       RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          SECRET_ARN: "arn:aws:secretsmanager:us-east-1:129200883043:secret:techno-secret-rds-credentials-RGYCXb"
       EphemeralStorage:
         Size: 512
-      Architectures:
-      - "x86_64"
       Layers:
       - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
-  techno-lambda-health-check:
+      Architectures:
+      - "x86_64"
+  LambdaFunctionTechnolambdaprocesspayment:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::Lambda::Function"
+    DeletionPolicy: "Delete"
+    Properties:
+      MemorySize: 512
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: true
+      Timeout: 30
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      Handler: "lambda_function.lambda_handler"
+      Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeSourceKMSKeyArnR5H7r"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeS3ObjectVersionpEJOv"
+        S3Bucket:
+          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeS3BucketV8lGi"
+        ZipFile:
+          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeZipFileaAQRH"
+        ImageUri:
+          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeImageUrioEpKz"
+        S3Key:
+          Ref: "LambdaFunctionTechnolambdaprocesspaymentCodeS3Key4ZAyy"
+      Role: "arn:aws:iam::129200883043:role/LabRole"
+      FileSystemConfigs: []
+      FunctionName: "techno-lambda-process-payment"
+      Runtime: "python3.11"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/techno-lambda-process-payment"
+      RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          SECRET_ARN: "arn:aws:secretsmanager:us-east-1:129200883043:secret:techno-secret-rds-credentials-RGYCXb"
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
+      Architectures:
+      - "x86_64"
+  LambdaFunctionTehnolambdahealthcheck:
+    UpdateReplacePolicy: "Delete"
     Type: "AWS::Lambda::Function"
     DeletionPolicy: "Delete"
     Properties:
       MemorySize: 128
       Description: ""
-      Timeout: 10
       TracingConfig:
         Mode: "PassThrough"
-      Timeout: 3
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: false
+      Timeout: 10
       RuntimeManagementConfig:
         UpdateRuntimeOn: "Auto"
       Handler: "lambda_function.lambda_handler"
       Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTehnolambdahealthcheckCodeSourceKMSKeyArn1pnhs"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTehnolambdahealthcheckCodeS3ObjectVersionrTgNM"
         S3Bucket:
-          Ref: ""
+          Ref: "LambdaFunctionTehnolambdahealthcheckCodeS3BucketjUe9o"
         ZipFile:
-          Ref: ""
+          Ref: "LambdaFunctionTehnolambdahealthcheckCodeZipFilemkpQw"
+        ImageUri:
+          Ref: "LambdaFunctionTehnolambdahealthcheckCodeImageUrizLCLc"
+        S3Key:
+          Ref: "LambdaFunctionTehnolambdahealthcheckCodeS3KeyRY97X"
       Role: "arn:aws:iam::129200883043:role/LabRole"
       FileSystemConfigs: []
-      FunctionName: "techno-lambda-health-check"
+      FunctionName: "tehno-lambda-health-check"
       Runtime: "python3.11"
       PackageType: "Zip"
       LoggingConfig:
         LogFormat: "Text"
-        LogGroup: "/aws/lambda/techno-lambda-health-check"
+        LogGroup: "/aws/lambda/tehno-lambda-health-check"
       RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          FUNCTION_VERSION: "1.0.0"
+          SECRET_ARN: "arn:aws:secretsmanager:us-east-1:129200883043:secret:techno-secret-rds-credentials-RGYCXb"
       EphemeralStorage:
         Size: 512
-      Architectures:
-      - "x86_64"
       Layers:
       - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
+      Architectures:
+      - "x86_64"
+  LambdaFunctionTechnolambdaordermanagement:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::Lambda::Function"
+    DeletionPolicy: "Delete"
+    Properties:
+      MemorySize: 512
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: true
+      Timeout: 30
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      Handler: "lambda_function.lambda_handler"
+      Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTechnolambdaordermanagementCodeSourceKMSKeyArnQiu6Z"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTechnolambdaordermanagementCodeS3ObjectVersionAxxkh"
+        S3Bucket:
+          Ref: "LambdaFunctionTechnolambdaordermanagementCodeS3BucketLGwtq"
+        ZipFile:
+          Ref: "LambdaFunctionTechnolambdaordermanagementCodeZipFileTLcEe"
+        ImageUri:
+          Ref: "LambdaFunctionTechnolambdaordermanagementCodeImageUrihGJZm"
+        S3Key:
+          Ref: "LambdaFunctionTechnolambdaordermanagementCodeS3KeyNIHmh"
+      Role: "arn:aws:iam::129200883043:role/LabRole"
+      FileSystemConfigs: []
+      FunctionName: "techno-lambda-order-management"
+      Runtime: "python3.11"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/techno-lambda-order-management"
+      RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          SECRET_ARN: "arn:aws:secretsmanager:us-east-1:129200883043:secret:techno-secret-rds-credentials-RGYCXb"
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
+      Architectures:
+      - "x86_64"
+  LambdaFunctionTechnolambdaupdateinventory:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::Lambda::Function"
+    DeletionPolicy: "Delete"
+    Properties:
+      MemorySize: 256
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: false
+      Timeout: 45
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      Handler: "lambda_function.lambda_handler"
+      Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTechnolambdaupdateinventoryCodeSourceKMSKeyArn8Vvk1"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTechnolambdaupdateinventoryCodeS3ObjectVersionCHO9R"
+        S3Bucket:
+          Ref: "LambdaFunctionTechnolambdaupdateinventoryCodeS3BucketIaXm2"
+        ZipFile:
+          Ref: "LambdaFunctionTechnolambdaupdateinventoryCodeZipFilefG349"
+        ImageUri:
+          Ref: "LambdaFunctionTechnolambdaupdateinventoryCodeImageUriieQLN"
+        S3Key:
+          Ref: "LambdaFunctionTechnolambdaupdateinventoryCodeS3Keypa722"
+      Role: "arn:aws:iam::129200883043:role/LabRole"
+      FileSystemConfigs: []
+      FunctionName: "techno-lambda-update-inventory"
+      Runtime: "python3.11"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/techno-lambda-update-inventory"
+      RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          LOW_STOCK_THRESHOLD: "5"
+          SECRET_ARN: "arn:aws:secretsmanager:us-east-1:129200883043:secret:techno-secret-rds-credentials-RGYCXb"
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
+      Architectures:
+      - "x86_64"
   SNSTopicTechnosnsordernotifications:
+    UpdateReplacePolicy: "Delete"
     Type: "AWS::SNS::Topic"
     DeletionPolicy: "Delete"
     Properties:
@@ -243,3 +273,107 @@ Resources:
         Key: "Name"
       ArchivePolicy: {}
       TopicName: "techno-sns-order-notifications"
+  LambdaFunctionTechnolambdageneratereport:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::Lambda::Function"
+    DeletionPolicy: "Delete"
+    Properties:
+      MemorySize: 1024
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: true
+      Timeout: 120
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      Handler: "lambda_function.lambda_handler"
+      Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTechnolambdageneratereportCodeSourceKMSKeyArnBODol"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTechnolambdageneratereportCodeS3ObjectVersionQmBgv"
+        S3Bucket:
+          Ref: "LambdaFunctionTechnolambdageneratereportCodeS3BucketaK4M9"
+        ZipFile:
+          Ref: "LambdaFunctionTechnolambdageneratereportCodeZipFile8X0ER"
+        ImageUri:
+          Ref: "LambdaFunctionTechnolambdageneratereportCodeImageUrizCfaf"
+        S3Key:
+          Ref: "LambdaFunctionTechnolambdageneratereportCodeS3KeykxXSk"
+      Role: "arn:aws:iam::129200883043:role/LabRole"
+      FileSystemConfigs: []
+      FunctionName: "techno-lambda-generate-report"
+      Runtime: "python3.11"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/techno-lambda-generate-report"
+      RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          S3_LOGS_BUCKET: "techno-logs-hafiz-2026"
+          SNS_TOPIC_ARN: "arn:aws:sns:us-east-1:129200883043:techno-sns-order-notifications"
+          SECRET_ARN: "arn:aws:secretsmanager:us-east-1:129200883043:secret:techno-secret-rds-credentials-RGYCXb"
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
+      Architectures:
+      - "x86_64"
+  LambdaFunctionTechnolambdasendnotification:
+    UpdateReplacePolicy: "Delete"
+    Type: "AWS::Lambda::Function"
+    DeletionPolicy: "Delete"
+    Properties:
+      MemorySize: 256
+      Description: ""
+      TracingConfig:
+        Mode: "PassThrough"
+      VpcConfig:
+        SecurityGroupIds:
+        - "sg-0749ffe133dd0ab91"
+        SubnetIds:
+        - "subnet-0209e4266296fa9f5"
+        - "subnet-0c215b2c28663bffc"
+        Ipv6AllowedForDualStack: true
+      Timeout: 60
+      RuntimeManagementConfig:
+        UpdateRuntimeOn: "Auto"
+      Handler: "lambda_function.lambda_handler"
+      Code:
+        SourceKMSKeyArn:
+          Ref: "LambdaFunctionTechnolambdasendnotificationCodeSourceKMSKeyArnuIs5E"
+        S3ObjectVersion:
+          Ref: "LambdaFunctionTechnolambdasendnotificationCodeS3ObjectVersionVcyUj"
+        S3Bucket:
+          Ref: "LambdaFunctionTechnolambdasendnotificationCodeS3BucketfYLLN"
+        ZipFile:
+          Ref: "LambdaFunctionTechnolambdasendnotificationCodeZipFileCD1Ha"
+        ImageUri:
+          Ref: "LambdaFunctionTechnolambdasendnotificationCodeImageUriyfZv6"
+        S3Key:
+          Ref: "LambdaFunctionTechnolambdasendnotificationCodeS3KeyYi5zk"
+      Role: "arn:aws:iam::129200883043:role/LabRole"
+      FileSystemConfigs: []
+      FunctionName: "techno-lambda-send-notification"
+      Runtime: "python3.11"
+      PackageType: "Zip"
+      LoggingConfig:
+        LogFormat: "Text"
+        LogGroup: "/aws/lambda/techno-lambda-send-notification"
+      RecursiveLoop: "Terminate"
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: "arn:aws:sns:us-east-1:129200883043:techno-sns-order-notifications"
+      EphemeralStorage:
+        Size: 512
+      Layers:
+      - "arn:aws:lambda:us-east-1:129200883043:layer:techno-layer-dependencies:1"
+      Architectures:
+      - "x86_64"

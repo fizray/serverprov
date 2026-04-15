@@ -1,0 +1,623 @@
+---
+Resources:
+  EC2RouteJt:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+      DestinationCidrBlock: "35.10.0.0/18"
+      GatewayId: "local"
+      VpcEndpointId: "local"
+  EC2RouteTableXG:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::RouteTable"
+    DeletionPolicy: "Retain"
+    Properties:
+      VpcId: "vpc-0ab81cd6f5b566815"
+      Tags:
+      - Value: "techno-rtb-private"
+        Key: "Name"
+  EC2RouteOU:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0743683808f25df17"
+      DestinationCidrBlock: "35.10.0.0/18"
+      GatewayId: "local"
+      VpcEndpointId: "local"
+  EC2Subnet:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Subnet"
+    DeletionPolicy: "Retain"
+    Properties:
+      MapPublicIpOnLaunch: false
+      EnableDns64: false
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityZoneId: "use1-az2"
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: false
+        HostnameType: "ip-name"
+        EnableResourceNameDnsAAAARecord: false
+      AvailabilityZone: "us-east-1a"
+      CidrBlock: "35.10.11.0/25"
+      Ipv6Native: false
+      Ipv6CidrBlock: "2600:1f18:683d:6302::/64"
+      Tags:
+      - Value: "techno-subnet-private-1"
+        Key: "Name"
+  EC2SecurityGroup:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SecurityGroup"
+    DeletionPolicy: "Retain"
+    Properties:
+      GroupDescription: "For VPC Endpoint. In 80 443 from ipv4 CIDR"
+      GroupName: "techno-sg-vpc-endpoint"
+      VpcId: "vpc-0ab81cd6f5b566815"
+      SecurityGroupIngress:
+      - CidrIp: "35.10.0.0/16"
+        IpProtocol: "tcp"
+        FromPort: 80
+        ToPort: 80
+      - CidrIp: "35.10.0.0/16"
+        IpProtocol: "tcp"
+        FromPort: 443
+        ToPort: 443
+      SecurityGroupEgress:
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+      - CidrIpv6: "::/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+      Tags:
+      - Value: "techno-sg-vpc-endpoint"
+        Key: "Name"
+  EC2SubnetNetworkAclAssociation:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      NetworkAclId: "acl-02b4bc8d579e3ea4c"
+      SubnetId: "subnet-0c215b2c28663bffc"
+  EC2SecurityGroupHG:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SecurityGroup"
+    DeletionPolicy: "Retain"
+    Properties:
+      GroupDescription: "For RDS. Allow only from sg-lambda"
+      GroupName: "techno-sg-rds"
+      VpcId: "vpc-0ab81cd6f5b566815"
+      SecurityGroupIngress:
+      - IpProtocol: "tcp"
+        FromPort: 5432
+        SourceSecurityGroupId: "sg-0749ffe133dd0ab91"
+        ToPort: 5432
+        SourceSecurityGroupOwnerId: "129200883043"
+      SecurityGroupEgress:
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+      - CidrIpv6: "::/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+      Tags:
+      - Value: "techno-sg-rds"
+        Key: "Name"
+  EC2VPCEndpointHU:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::VPCEndpoint"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateDnsEnabled: false
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-1"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "service-defined"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds: []
+      SubnetIds: []
+      ServiceNetworkArn: ""
+      VpcId: "vpc-0ab81cd6f5b566815"
+      RouteTableIds:
+      - Ref: "EC2RouteTableXG"
+      ServiceName: "com.amazonaws.us-east-1.s3"
+      PolicyDocument:
+        Version: "2008-10-17"
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Gateway"
+      Tags:
+      - Value: "techno-s3-endpoints"
+        Key: "Name"
+  EC2SubnetRouteTableAssociationLp:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+      SubnetId: "subnet-0209e4266296fa9f5"
+  EC2SubnetJu:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Subnet"
+    DeletionPolicy: "Retain"
+    Properties:
+      MapPublicIpOnLaunch: false
+      EnableDns64: false
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityZoneId: "use1-az4"
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: false
+        HostnameType: "ip-name"
+        EnableResourceNameDnsAAAARecord: false
+      AvailabilityZone: "us-east-1b"
+      CidrBlock: "35.10.1.0/25"
+      Ipv6Native: false
+      Ipv6CidrBlock: "2600:1f18:683d:6301::/64"
+      Tags:
+      - Value: "techno-subnet-public-2"
+        Key: "Name"
+  EC2NatGateway:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::NatGateway"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateIpAddress: "35.10.11.118"
+      ConnectivityType: "public"
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityMode: "zonal"
+      AllocationId: "eipalloc-01a295a738bc33c5b"
+      SubnetId: "subnet-0209e4266296fa9f5"
+      Tags:
+      - Value: "techno-vpc-natgw-private-1"
+        Key: "Name"
+  EC2RouteQG:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      DestinationIpv6CidrBlock: "2600:1f18:683d:6300::/56"
+      RouteTableId: "rtb-007786bfec2e2d39f"
+      GatewayId: "local"
+      VpcEndpointId: "local"
+  EC2NatGatewayDI:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::NatGateway"
+    DeletionPolicy: "Retain"
+    Properties:
+      ConnectivityType: "public"
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityZoneAddresses:
+      - AvailabilityZoneId: "use1-az6"
+        AvailabilityZone: "us-east-1c"
+        AllocationIds:
+        - "eipalloc-0d02faed7f032e23f"
+      - AvailabilityZoneId: "use1-az2"
+        AvailabilityZone: "us-east-1a"
+        AllocationIds:
+        - "eipalloc-0c824033fce09ac16"
+      - AvailabilityZoneId: "use1-az4"
+        AvailabilityZone: "us-east-1b"
+        AllocationIds:
+        - "eipalloc-005094e8c6a98e9ea"
+      AvailabilityMode: "regional"
+      Tags:
+      - Value: "techno-vpc-natgw"
+        Key: "Name"
+  EC2SubnetNetworkAclAssociationW0:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      NetworkAclId: "acl-02b4bc8d579e3ea4c"
+      SubnetId: "subnet-080b8d11f53e1fa34"
+  EC2RouteAu:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      EgressOnlyInternetGatewayId: "eigw-0151aa8ea1470e172"
+      DestinationIpv6CidrBlock: "::/0"
+      RouteTableId: "rtb-0743683808f25df17"
+  EC2SubnetNetworkAclAssociationER:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      NetworkAclId: "acl-02b4bc8d579e3ea4c"
+      SubnetId: "subnet-0a5c2e0b5e8dcf775"
+  EC2SubnetCidrBlockSL:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetCidrBlock"
+    DeletionPolicy: "Retain"
+    Properties:
+      Ipv6CidrBlock: "2600:1f18:683d:6300::/64"
+      SubnetId: "subnet-0a5c2e0b5e8dcf775"
+  EC2NatGatewayYv:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::NatGateway"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateIpAddress: "35.10.12.43"
+      ConnectivityType: "public"
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityMode: "zonal"
+      AllocationId: "eipalloc-04ee92f883fcc24ac"
+      SubnetId: "subnet-0c215b2c28663bffc"
+      Tags:
+      - Value: "techno-vpc-natgw-private-2"
+        Key: "Name"
+  EC2RouteCo:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      EgressOnlyInternetGatewayId: "eigw-0151aa8ea1470e172"
+      DestinationIpv6CidrBlock: "::/0"
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+  EC2SubnetCidrBlockOK:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetCidrBlock"
+    DeletionPolicy: "Retain"
+    Properties:
+      Ipv6CidrBlock: "2600:1f18:683d:6303::/64"
+      SubnetId: "subnet-0c215b2c28663bffc"
+  EC2VPCEndpointB1:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::VPCEndpoint"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-1"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-0626a44a9b8a5145b"
+      SubnetIds:
+      - Ref: "EC2Subnet"
+      - Ref: "EC2SubnetJC"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-0ab81cd6f5b566815"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-1.states"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "techno-steps-endpoints"
+        Key: "Name"
+  EC2RouteTableSB:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::RouteTable"
+    DeletionPolicy: "Retain"
+    Properties:
+      VpcId: "vpc-0ab81cd6f5b566815"
+      Tags:
+      - Value: "techno-rtb-public"
+        Key: "Name"
+  EC2RouteLT:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-007786bfec2e2d39f"
+      DestinationCidrBlock: "35.10.0.0/18"
+      GatewayId: "local"
+      VpcEndpointId: "local"
+  EC2SubnetRouteTableAssociationWE:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0743683808f25df17"
+      SubnetId: "subnet-0a5c2e0b5e8dcf775"
+  EC2SubnetJC:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Subnet"
+    DeletionPolicy: "Retain"
+    Properties:
+      MapPublicIpOnLaunch: false
+      EnableDns64: false
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityZoneId: "use1-az4"
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: false
+        HostnameType: "ip-name"
+        EnableResourceNameDnsAAAARecord: false
+      AvailabilityZone: "us-east-1b"
+      CidrBlock: "35.10.12.0/25"
+      Ipv6Native: false
+      Ipv6CidrBlock: "2600:1f18:683d:6303::/64"
+      Tags:
+      - Value: "techno-subnet-private-2"
+        Key: "Name"
+  EC2RouteBD:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+      DestinationPrefixListId: "pl-63a5400a"
+      GatewayId: "vpce-0769e6098168290cc"
+      VpcEndpointId: "vpce-0769e6098168290cc"
+  EC2Route:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-007786bfec2e2d39f"
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: "igw-015d93395990bc9d1"
+      VpcEndpointId: "igw-015d93395990bc9d1"
+  EC2SubnetNetworkAclAssociationPl:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetNetworkAclAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      NetworkAclId: "acl-02b4bc8d579e3ea4c"
+      SubnetId: "subnet-0209e4266296fa9f5"
+  EC2SecurityGroupVx:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SecurityGroup"
+    DeletionPolicy: "Retain"
+    Properties:
+      GroupDescription: "For Lambda"
+      GroupName: "techno-sg-lambda"
+      VpcId: "vpc-0ab81cd6f5b566815"
+      SecurityGroupEgress:
+      - CidrIp: "0.0.0.0/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+      - CidrIpv6: "::/0"
+        IpProtocol: "-1"
+        FromPort: -1
+        ToPort: -1
+      Tags:
+      - Value: "techno-sg-lambda"
+        Key: "Name"
+  EC2RouteRN:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      DestinationIpv6CidrBlock: "2600:1f18:683d:6300::/56"
+      RouteTableId: "rtb-0743683808f25df17"
+      GatewayId: "local"
+      VpcEndpointId: "local"
+  EC2SubnetPB:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Subnet"
+    DeletionPolicy: "Retain"
+    Properties:
+      MapPublicIpOnLaunch: false
+      EnableDns64: false
+      VpcId: "vpc-0ab81cd6f5b566815"
+      AvailabilityZoneId: "use1-az2"
+      PrivateDnsNameOptionsOnLaunch:
+        EnableResourceNameDnsARecord: false
+        HostnameType: "ip-name"
+        EnableResourceNameDnsAAAARecord: false
+      AvailabilityZone: "us-east-1a"
+      CidrBlock: "35.10.0.0/25"
+      Ipv6Native: false
+      Ipv6CidrBlock: "2600:1f18:683d:6300::/64"
+      Tags:
+      - Value: "techno-subnet-public-1"
+        Key: "Name"
+  EC2RouteGb:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      NatGatewayId: "nat-145b8171408da8c60"
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+      DestinationCidrBlock: "0.0.0.0/0"
+  EC2VPCEndpointFe:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::VPCEndpoint"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-1"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-0626a44a9b8a5145b"
+      SubnetIds:
+      - Ref: "EC2Subnet"
+      - Ref: "EC2SubnetJC"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-0ab81cd6f5b566815"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-1.sns"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "techno-sns-endpoints"
+        Key: "Name"
+  EC2VPC:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::VPC"
+    DeletionPolicy: "Retain"
+    Properties:
+      CidrBlock: "35.10.0.0/18"
+      EnableDnsSupport: true
+      InstanceTenancy: "default"
+      EnableDnsHostnames: true
+      Tags:
+      - Value: "techno-vpc-serverless"
+        Key: "Name"
+  EC2VPCEndpointVx:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::VPCEndpoint"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-1"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-0626a44a9b8a5145b"
+      SubnetIds:
+      - Ref: "EC2Subnet"
+      - Ref: "EC2SubnetJC"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-0ab81cd6f5b566815"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-1.events"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "techno-eventbridge-endpoints"
+        Key: "Name"
+  EC2EgressOnlyInternetGateway:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::EgressOnlyInternetGateway"
+    DeletionPolicy: "Retain"
+    Properties:
+      VpcId: "vpc-0ab81cd6f5b566815"
+      Tags:
+      - Value: "techno-vpc-eigw"
+        Key: "Name"
+  EC2SubnetCidrBlockBI:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetCidrBlock"
+    DeletionPolicy: "Retain"
+    Properties:
+      Ipv6CidrBlock: "2600:1f18:683d:6302::/64"
+      SubnetId: "subnet-0209e4266296fa9f5"
+  EC2RouteTable:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::RouteTable"
+    DeletionPolicy: "Retain"
+    Properties:
+      VpcId: "vpc-0ab81cd6f5b566815"
+      Tags:
+      - Value: "techno-rtb-natgw"
+        Key: "Name"
+  EC2InternetGateway:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::InternetGateway"
+    DeletionPolicy: "Retain"
+    Properties:
+      Tags:
+      - Value: "techno-vpc-igw"
+        Key: "Name"
+  EC2SubnetRouteTableAssociation:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+      SubnetId: "subnet-0c215b2c28663bffc"
+  EC2RouteB4:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      DestinationIpv6CidrBlock: "2600:1f18:683d:6300::/56"
+      RouteTableId: "rtb-0da8fcfcdffe1c8a0"
+      GatewayId: "local"
+      VpcEndpointId: "local"
+  EC2RouteH8:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::Route"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0743683808f25df17"
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: "igw-015d93395990bc9d1"
+      VpcEndpointId: "igw-015d93395990bc9d1"
+  EC2SubnetRouteTableAssociationLE:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    DeletionPolicy: "Retain"
+    Properties:
+      RouteTableId: "rtb-0743683808f25df17"
+      SubnetId: "subnet-080b8d11f53e1fa34"
+  EC2VPCEndpoint:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::VPCEndpoint"
+    DeletionPolicy: "Retain"
+    Properties:
+      PrivateDnsEnabled: true
+      IpAddressType: "ipv4"
+      ServiceRegion: "us-east-1"
+      DnsOptions:
+        PrivateDnsOnlyForInboundResolverEndpoint: "NotSpecified"
+        PrivateDnsSpecifiedDomains:
+        - "*"
+        DnsRecordIpType: "ipv4"
+        PrivateDnsPreference: "VERIFIED_DOMAINS_ONLY"
+      ResourceConfigurationArn: ""
+      SecurityGroupIds:
+      - "sg-0626a44a9b8a5145b"
+      SubnetIds:
+      - Ref: "EC2Subnet"
+      - Ref: "EC2SubnetJC"
+      ServiceNetworkArn: ""
+      VpcId: "vpc-0ab81cd6f5b566815"
+      RouteTableIds: []
+      ServiceName: "com.amazonaws.us-east-1.secretsmanager"
+      PolicyDocument:
+        Statement:
+        - Resource: "*"
+          Action: "*"
+          Effect: "Allow"
+          Principal: "*"
+      VpcEndpointType: "Interface"
+      Tags:
+      - Value: "techno-secretsmanager-endpoints"
+        Key: "Name"
+  EC2SubnetCidrBlock:
+    UpdateReplacePolicy: "Retain"
+    Type: "AWS::EC2::SubnetCidrBlock"
+    DeletionPolicy: "Retain"
+    Properties:
+      Ipv6CidrBlock: "2600:1f18:683d:6301::/64"
+      SubnetId: "subnet-080b8d11f53e1fa34"
